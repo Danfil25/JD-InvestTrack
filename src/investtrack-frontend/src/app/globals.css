@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Paleta InvestTrack */
+:root {
+  --navy: #142b45;
+  --brand: #16a37a;
+  --surface: #f3f5f8;
+  --danger: #dc5656;
+  --foreground: #142b45;
+  --muted-foreground: #5f6f84;
+  --border: #e1e6ed;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-soft: #1d3a5c;
+  --color-brand: var(--brand);
+  --color-brand-soft: #e3f5ef;
+  --color-surface: var(--surface);
+  --color-danger: var(--danger);
+  --color-danger-soft: #fbeaea;
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+* {
+  border-color: var(--border);
+}
+
+/* Foco visível e consistente */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
