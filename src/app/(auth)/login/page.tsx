@@ -24,7 +24,7 @@ export default function LoginPage() {
   async function onSubmit(values: LoginValues) {
     setError(null);
     try {
-      await signIn(values.email);
+     await signIn({email: values.email, password: values.password });
       router.replace("/dashboard");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível iniciar sessão.");
@@ -35,7 +35,7 @@ export default function LoginPage() {
     <>
       <h1 className="text-2xl font-semibold text-navy">Iniciar sessão</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Bem-vindo de volta. Introduza os seus dados.
+        Bem-vindo de volta. Introduza os seus dados. 
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>

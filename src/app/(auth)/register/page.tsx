@@ -28,7 +28,12 @@ export default function RegisterPage() {
   async function onSubmit(values: RegisterValues) {
     setError(null);
     try {
-      await signUp({ name: values.name, email: values.email, currency: values.currency });
+      await signUp({ 
+        name: values.name, 
+        email: values.email, 
+        currency: values.currency,
+        password: values.password 
+      });
       router.replace("/dashboard");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível criar a conta.");

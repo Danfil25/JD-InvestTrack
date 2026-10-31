@@ -1,19 +1,10 @@
-/**
- * ⚠️ SERVIÇO DE AUTENTICAÇÃO PROVISÓRIO (apenas frontend).
- *
- * Guarda o perfil e a sessão em localStorage e NÃO verifica palavras-passe.
- * Serve exclusivamente para desenvolver e testar a interface.
- * Na fase de backend, substituir o corpo destas funções por chamadas ao
- * Supabase Auth (signUp, signInWithPassword, signOut, resetPasswordForEmail,
- * getSession) mantendo as mesmas assinaturas.
- */
 import type { CurrencyCode, Profile } from "@/types";
 import { newId } from "@/lib/utils/format";
 
 const USERS_KEY = "investtrack:users";
 const SESSION_KEY = "investtrack:session";
 
-function readUsers(): Profile[] {
+function readLocalUsers(): Profile[] {
   try {
     return JSON.parse(localStorage.getItem(USERS_KEY) ?? "[]") as Profile[];
   } catch {
@@ -21,44 +12,67 @@ function readUsers(): Profile[] {
   }
 }
 
-function writeUsers(users: Profile[]) {
+function writeLocalUsers(users: Profile[]) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
 export function getSession(): Profile | null {
   const id = localStorage.getItem(SESSION_KEY);
   if (!id) return null;
-  return readUsers().find((u) => u.id === id) ?? null;
+  return readLocalUsers().find((u) => u.id === id) ?? null;
 }
 
 export async function signUp(input: {
   name: string;
   email: string;
   currency: CurrencyCode;
+  password?: string; 
 }): Promise<Profile> {
-  const users = readUsers();
-  const email = input.email.trim().toLowerCase();
-  if (users.some((u) => u.email === email)) {
-    throw new Error("Já existe uma conta com este email.");
+  
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || "Erro ao criar conta.");
   }
-  const profile: Profile = {
-    id: newId(),
-    name: input.name.trim(),
-    email,
-    currency: input.currency,
-    created_at: new Date().toISOString(),
-  };
-  writeUsers([...users, profile]);
+
+  const profile = data.user as Profile;
+
   localStorage.setItem(SESSION_KEY, profile.id);
+  
+  const localUsers = readLocalUsers();
+  writeLocalUsers([...localUsers, profile]);
+
   return profile;
 }
 
-export async function signIn(input: { email: string }): Promise<Profile> {
-  const email = input.email.trim().toLowerCase();
-  const profile = readUsers().find((u) => u.email === email);
-  // Mensagem genérica: não revelar se o email existe.
-  if (!profile) throw new Error("Email ou palavra-passe incorrectos.");
+export async function signIn(input: { email: string; password?: string }): Promise<Profile> {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || "Email ou palavra-passe incorrectos.");
+  }
+
+  const profile = data.user as Profile;
+
   localStorage.setItem(SESSION_KEY, profile.id);
+
+  const localUsers = readLocalUsers();
+  if (!localUsers.some(u => u.id === profile.id)) {
+    writeLocalUsers([...localUsers, profile]);
+  }
+
   return profile;
 }
 
@@ -67,19 +81,17 @@ export async function signOut(): Promise<void> {
 }
 
 export async function requestPasswordReset(): Promise<void> {
-  // Provisório: com Supabase → auth.resetPasswordForEmail(email).
-  // Resposta sempre igual, exista ou não a conta.
-  return;
+  return; 
 }
 
 export async function updateProfile(
   id: string,
   patch: Pick<Profile, "name" | "currency">,
 ): Promise<Profile> {
-  const users = readUsers();
+  const users = readLocalUsers();
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) throw new Error("Perfil não encontrado.");
   users[index] = { ...users[index], ...patch };
-  writeUsers(users);
+  writeLocalUsers(users);
   return users[index];
 }

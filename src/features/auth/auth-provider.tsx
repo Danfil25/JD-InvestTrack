@@ -6,10 +6,9 @@ import * as authService from "./auth-service";
 
 interface AuthContextValue {
   user: Profile | null;
-  /** false até a sessão ser lida no cliente (evita flash/hidratação). */
   ready: boolean;
-  signIn: (email: string) => Promise<void>;
-  signUp: (input: { name: string; email: string; currency: CurrencyCode }) => Promise<void>;
+  signIn: (input: { email: string; password?: string }) => Promise<void>;
+  signUp: (input: { name: string; email: string; currency: CurrencyCode; password?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (patch: Pick<Profile, "name" | "currency">) => Promise<void>;
 }
@@ -21,8 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
-    // Ler localStorage só no cliente, depois da hidratação.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUser(authService.getSession());
     setReady(true);
   }, []);
@@ -31,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       ready,
-      signIn: async (email) => setUser(await authService.signIn({ email })),
+      signIn: async (input) => setUser(await authService.signIn(input)),
       signUp: async (input) => setUser(await authService.signUp(input)),
       signOut: async () => {
         await authService.signOut();
